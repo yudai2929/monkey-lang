@@ -1,10 +1,19 @@
 package main
 
-func main() {
-	// Call the function
-	hello()
-}
+import (
+	"fmt"
+	"gtihub.com/yudai2929/monkey-lang/repl"
+	"os"
+	"os/user"
+)
 
-func hello() {
-	println("Hello, World!")
+func main() {
+
+	u, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Hello %s! This is the Monkey programming language!\n", u.Username)
+	fmt.Printf("Feel free to type in commands\n")
+	repl.Start(os.Stdin, os.Stdout)
 }

@@ -7,6 +7,10 @@ type Token struct {
 	Literal string
 }
 
+func (t Token) IsEOF() bool {
+	return t.Type == EOF
+}
+
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
