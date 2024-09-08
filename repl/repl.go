@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"gtihub.com/yudai2929/monkey-lang/lexer"
+	"gtihub.com/yudai2929/monkey-lang/token"
 	"io"
 )
 
@@ -22,7 +23,7 @@ func Start(in io.Reader, _ io.Writer) {
 		line := scanner.Text()
 		l := lexer.New(line)
 
-		for tok := l.NextToken(); !tok.IsEOF(); tok = l.NextToken() {
+		for tok := l.NextToken(); !tok.IsType(token.EOF); tok = l.NextToken() {
 			fmt.Printf("%+v\n", tok)
 		}
 	}

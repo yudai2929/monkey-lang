@@ -7,8 +7,8 @@ type Token struct {
 	Literal string
 }
 
-func (t Token) IsEOF() bool {
-	return t.Type == EOF
+func (t Token) IsType(ty Type) bool {
+	return t.Type == ty
 }
 
 const (
