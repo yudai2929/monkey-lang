@@ -24,6 +24,10 @@ const (
 	FUNCTION_OBJ = "FUNCTION"
 	// STRING_OBJ is the string object type
 	STRING_OBJ = "STRING"
+	// BUILTIN_OBJ is the built-in function object type
+	BUILTIN_OBJ = "BUILTIN"
+	// ARRAY_OBJ is the array object type
+	ARRAY_OBJ = "ARRAY"
 )
 
 // Object is the interface that all objects in the interpreter implement
@@ -134,7 +138,31 @@ type Builtin struct {
 }
 
 // Type returns the type of the object
-func (b *Builtin) Type() ObjectType { return FUNCTION_OBJ }
+func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
 
 // Inspect returns the string representation of the object
 func (b *Builtin) Inspect() string { return "builtin function" }
+
+// Array is the array object
+type Array struct {
+	Elements []Object
+}
+
+// Type returns the type of the object
+func (ao *Array) Type() ObjectType { return ARRAY_OBJ }
+
+// Inspect returns the string representation of the object
+func (ao *Array) Inspect() string {
+	var out bytes.Buffer
+
+	var elements []string
+	for _, el := range ao.Elements {
+		elements = append(elements, el.Inspect())
+	}
+
+	out.WriteString("[")
+	out.WriteString(fmt.Sprintf("%s", elements))
+	out.WriteString("]")
+
+	return out.String()
+}

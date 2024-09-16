@@ -246,6 +246,8 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{"a + add(b * c) + d", "((a + add((b * c))) + d)"},
 		{"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
 		{"add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"},
+		{"a * [1, 2, 3, 4][b * c] * d", "((a * ([1, 2, 3, 4][(b * c)])) * d)"},
+		{"add(a * b[2], b[1], 2 * [1, 2][1])", "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"},
 	}
 
 	for _, tt := range tests {
@@ -535,4 +537,45 @@ func TestStringLiteralExpression(t *testing.T) {
 	require.True(t, ok, "exp not *ast.StringLiteral. got=%T", stmt.Expression)
 
 	assert.Equal(t, "hello world", literal.Value, "literal.Value not %s. got=%s", "hello world", literal.Value)
+}
+
+func TestArrayLiteralParsing(t *testing.T) {
+	input := "[1, 2 * 2, 3 + 3]"
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok, "program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+
+	array, ok := stmt.Expression.(*ast.ArrayLiteral)
+	require.True(t, ok, "exp is not ast.ArrayLiteral. got=%T", stmt.Expression)
+
+	require.Equal(t, 3, len(array.Elements), "len(array.Elements) not 3. got=%d", len(array.Elements))
+
+	testIntegerLiteral(t, array.Elements[0], 1)
+	testInfixExpression(t, array.Elements[1], 2, "*", 2)
+	testInfixExpression(t, array.Elements[2], 3, "+", 3)
+}
+
+func TestParsingIndexExpressions(t *testing.T) {
+	input := "myArray[1 + 1]"
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok, "program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+
+	indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+	require.True(t, ok, "exp is not ast.IndexExpression. got=%T", stmt.Expression)
+
+	testIdentifier(t, indexExp.Left, "myArray")
+	testInfixExpression(t, indexExp.Index, 1, "+", 1)
 }
