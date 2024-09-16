@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"gtihub.com/yudai2929/monkey-lang/ast"
+	"hash/fnv"
 )
 
 // ObjectType is the type of the object
@@ -28,7 +29,20 @@ const (
 	BUILTIN_OBJ = "BUILTIN"
 	// ARRAY_OBJ is the array object type
 	ARRAY_OBJ = "ARRAY"
+	// HASH_OBJ is the hash object type
+	HASH_OBJ = "HASH"
 )
+
+// HashKey is the hash key object
+type HashKey struct {
+	Type  ObjectType
+	Value uint64
+}
+
+// Hashable is the interface that all hashable objects in the interpreter implement
+type Hashable interface {
+	HashKey() HashKey
+}
 
 // Object is the interface that all objects in the interpreter implement
 type Object interface {
@@ -47,6 +61,11 @@ func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
 // Inspect returns the string representation of the object
 func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
 
+// HashKey returns the hash key of the object
+func (i *Integer) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
+}
+
 // Boolean is the boolean object
 type Boolean struct {
 	Value bool
@@ -57,6 +76,18 @@ func (b *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
 
 // Inspect returns the string representation of the object
 func (b *Boolean) Inspect() string { return fmt.Sprintf("%t", b.Value) }
+
+// HashKey returns the hash key of the object
+func (b *Boolean) HashKey() HashKey {
+	var value uint64
+	if b.Value {
+		value = 1
+	} else {
+		value = 0
+	}
+
+	return HashKey{Type: b.Type(), Value: value}
+}
 
 // Null is the null object
 type Null struct{}
@@ -129,6 +160,14 @@ func (s *String) Type() ObjectType { return STRING_OBJ }
 // Inspect returns the string representation of the object
 func (s *String) Inspect() string { return s.Value }
 
+// HashKey returns the hash key of the object
+func (s *String) HashKey() HashKey {
+	var h = fnv.New64a()
+	h.Write([]byte(s.Value))
+
+	return HashKey{Type: s.Type(), Value: h.Sum64()}
+}
+
 // BuiltinFunctionType is the type of the built-in function
 type BuiltinFunctionType func(args ...Object) Object
 
@@ -163,6 +202,36 @@ func (ao *Array) Inspect() string {
 	out.WriteString("[")
 	out.WriteString(fmt.Sprintf("%s", elements))
 	out.WriteString("]")
+
+	return out.String()
+}
+
+// HashPair is the key-value pair of the hash object
+type HashPair struct {
+	Key   Object
+	Value Object
+}
+
+// Hash is the hash object
+type Hash struct {
+	Pairs map[HashKey]HashPair
+}
+
+// Type returns the type of the object
+func (h *Hash) Type() ObjectType { return HASH_OBJ }
+
+// Inspect returns the string representation of the object
+func (h *Hash) Inspect() string {
+	var out bytes.Buffer
+
+	var pairs []string
+	for _, pair := range h.Pairs {
+		pairs = append(pairs, fmt.Sprintf("%s: %s", pair.Key.Inspect(), pair.Value.Inspect()))
+	}
+
+	out.WriteString("{")
+	out.WriteString(fmt.Sprintf("%s", pairs))
+	out.WriteString("}")
 
 	return out.String()
 }
