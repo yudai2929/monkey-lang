@@ -3,7 +3,9 @@ package repl
 import (
 	"bufio"
 	"fmt"
+	"gtihub.com/yudai2929/monkey-lang/evalutor"
 	"gtihub.com/yudai2929/monkey-lang/lexer"
+	"gtihub.com/yudai2929/monkey-lang/object"
 	"gtihub.com/yudai2929/monkey-lang/parser"
 	"io"
 )
@@ -12,6 +14,7 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) error {
 	scanner := bufio.NewScanner(in)
+	env := object.NewEnvironment()
 
 	for {
 		fmt.Printf(PROMPT)
@@ -32,11 +35,14 @@ func Start(in io.Reader, out io.Writer) error {
 			continue
 		}
 
-		if _, err := io.WriteString(out, program.String()); err != nil {
-			return err
-		}
-		if _, err := io.WriteString(out, "\n"); err != nil {
-			return err
+		evaluated := evalutor.Eval(program, env)
+		if evaluated != nil {
+			if _, err := io.WriteString(out, evaluated.Inspect()); err != nil {
+				return err
+			}
+			if _, err := io.WriteString(out, "\n"); err != nil {
+				return err
+			}
 		}
 
 	}
