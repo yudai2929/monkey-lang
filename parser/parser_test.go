@@ -516,3 +516,23 @@ func TestCallExpressionParsing(t *testing.T) {
 	testInfixExpression(t, exp.Arguments[1], 2, "*", 3)
 	testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
 }
+
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"hello world";`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	require.Equal(t, 1, len(program.Statements), "program.Statements does not contain 1 statements. got=%d", len(program.Statements))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	require.True(t, ok, "program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+
+	literal, ok := stmt.Expression.(*ast.StringLiteral)
+	require.True(t, ok, "exp not *ast.StringLiteral. got=%T", stmt.Expression)
+
+	assert.Equal(t, "hello world", literal.Value, "literal.Value not %s. got=%s", "hello world", literal.Value)
+}

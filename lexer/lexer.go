@@ -83,6 +83,9 @@ func (l *Lexer) NextToken() token.Token {
 		tok = token.New(token.LBRACE, l.ch)
 	case '}':
 		tok = token.New(token.RBRACE, l.ch)
+	case '"':
+		tok.Type = token.STRING
+		tok.Literal = l.readString()
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -111,6 +114,18 @@ func (l *Lexer) readIdentifier() string {
 	}
 	return l.input[position:l.position]
 
+}
+
+// readString reads a string from the input
+func (l *Lexer) readString() string {
+	position := l.position + 1
+	for {
+		l.readChar()
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+	return l.input[position:l.position]
 }
 
 // isLetter checks if a character is a letter

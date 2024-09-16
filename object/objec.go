@@ -22,6 +22,8 @@ const (
 	ERROR_OBJ = "ERROR"
 	// FUNCTION_OBJ is the function object type
 	FUNCTION_OBJ = "FUNCTION"
+	// STRING_OBJ is the string object type
+	STRING_OBJ = "STRING"
 )
 
 // Object is the interface that all objects in the interpreter implement
@@ -111,3 +113,28 @@ func (f *Function) Inspect() string {
 
 	return out.String()
 }
+
+// String is the string object
+type String struct {
+	Value string
+}
+
+// Type returns the type of the object
+func (s *String) Type() ObjectType { return STRING_OBJ }
+
+// Inspect returns the string representation of the object
+func (s *String) Inspect() string { return s.Value }
+
+// BuiltinFunctionType is the type of the built-in function
+type BuiltinFunctionType func(args ...Object) Object
+
+// Builtin is the built-in function object
+type Builtin struct {
+	Fn BuiltinFunctionType
+}
+
+// Type returns the type of the object
+func (b *Builtin) Type() ObjectType { return FUNCTION_OBJ }
+
+// Inspect returns the string representation of the object
+func (b *Builtin) Inspect() string { return "builtin function" }
